@@ -1,0 +1,638 @@
+{
+  "name": "cyberpunk-typing-game",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "framer-motion": "^10.16.4",
+    "recharts": "^2.10.3"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6",
+    "vite": "^5.0.7"
+  }
+}
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 3000,
+    host: true
+  }
+})
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        'cyber-dark': '#0a0a0f',
+        'cyber-darker': '#050508',
+        'neon-cyan': '#00f0ff',
+        'neon-magenta': '#ff00ff',
+        'neon-lime': '#39ff14',
+      },
+      boxShadow: {
+        'neon-cyan': '0 0 20px rgba(0, 240, 255, 0.5), 0 0 40px rgba(0, 240, 255, 0.3)',
+        'neon-magenta': '0 0 20px rgba(255, 0, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)',
+        'neon-lime': '0 0 20px rgba(57, 255, 20, 0.5), 0 0 40px rgba(57, 255, 20, 0.3)',
+        'glass': '0 8px 32px 0 rgba(0, 240, 255, 0.1)',
+      },
+      backgroundImage: {
+        'glass': 'linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02))',
+      },
+    },
+  },
+  plugins: [],
+}
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cyberpunk Typing Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Rajdhani', sans-serif;
+  background-color: #0a0a0f;
+  color: #ffffff;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Orbitron', sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0f;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00f0ff, #ff00ff);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff00ff, #39ff14);
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Neon glow animations */
+@keyframes neon-pulse {
+  0%, 100% {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+  }
+  50% {
+    text-shadow: 0 0 20px currentColor, 0 0 30px currentColor, 0 0 40px currentColor;
+  }
+}
+
+.neon-text {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+/* Grid background */
+.grid-background {
+  background-image: 
+    linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: center center;
+}
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+// Sample text pool
+const textPool = [
+  "The neon lights flickered in the rain-soaked streets of the cyberpunk city. Data streams flowed like rivers through the digital landscape.",
+  "In the year 2077, technology and humanity merged into a seamless digital existence. The boundaries between reality and virtual worlds blurred.",
+  "Hackers navigated through layers of encrypted networks, seeking forbidden knowledge in the vast expanse of cyberspace.",
+  "Chrome augmentations gleamed under artificial light as citizens walked through holographic advertisements.",
+  "The megacorporations controlled everything, from the air people breathed to the thoughts they thought.",
+];
+
+function App() {
+  const [gameState, setGameState] = useState('idle'); // idle, playing, finished
+  const [selectedMode, setSelectedMode] = useState(30);
+  const [text, setText] = useState('');
+  const [userInput, setUserInput] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [startTime, setStartTime] = useState(null);
+  const [wpm, setWpm] = useState(0);
+  const [accuracy, setAccuracy] = useState(100);
+  const [correctChars, setCorrectChars] = useState(0);
+  const [incorrectChars, setIncorrectChars] = useState(0);
+  const [wpmHistory, setWpmHistory] = useState([]);
+  const [errorShake, setErrorShake] = useState(false);
+  const inputRef = useRef(null);
+  const timerRef = useRef(null);
+
+  // Initialize game
+  const initGame = useCallback(() => {
+    const randomText = textPool[Math.floor(Math.random() * textPool.length)];
+    setText(randomText);
+    setUserInput('');
+    setCurrentIndex(0);
+    setTimeLeft(selectedMode);
+    setWpm(0);
+    setAccuracy(100);
+    setCorrectChars(0);
+    setIncorrectChars(0);
+    setWpmHistory([]);
+    setGameState('idle');
+  }, [selectedMode]);
+
+  // Start game
+  const startGame = () => {
+    initGame();
+    setGameState('playing');
+    setStartTime(Date.now());
+    inputRef.current?.focus();
+  };
+
+  // Calculate WPM and Accuracy
+  const calculateStats = useCallback(() => {
+    if (!startTime) return;
+
+    const timeElapsed = (Date.now() - startTime) / 1000 / 60; // minutes
+    const wordsTyped = correctChars / 5; // Standard: 5 chars = 1 word
+    const currentWpm = Math.round(wordsTyped / timeElapsed) || 0;
+    
+    setWpm(currentWpm);
+
+    const totalChars = correctChars + incorrectChars;
+    const currentAccuracy = totalChars > 0 
+      ? Math.round((correctChars / totalChars) * 100) 
+      : 100;
+    setAccuracy(currentAccuracy);
+
+    // Add to history for graph
+    const elapsed = selectedMode - timeLeft;
+    if (elapsed > 0 && elapsed % 2 === 0) { // Record every 2 seconds
+      setWpmHistory(prev => {
+        const exists = prev.find(item => item.time === elapsed);
+        if (!exists) {
+          return [...prev, { time: elapsed, wpm: currentWpm }];
+        }
+        return prev;
+      });
+    }
+  }, [startTime, correctChars, incorrectChars, timeLeft, selectedMode]);
+
+  // Timer effect
+  useEffect(() => {
+    if (gameState === 'playing' && timeLeft > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            setGameState('finished');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timerRef.current);
+    }
+  }, [gameState, timeLeft]);
+
+  // Calculate stats periodically
+  useEffect(() => {
+    if (gameState === 'playing') {
+      calculateStats();
+    }
+  }, [gameState, calculateStats, userInput]);
+
+  // Handle typing
+  const handleTyping = (e) => {
+    if (gameState !== 'playing') return;
+
+    const value = e.target.value;
+    const lastChar = value[value.length - 1];
+    const expectedChar = text[currentIndex];
+
+    if (lastChar === expectedChar) {
+      setCorrectChars(prev => prev + 1);
+      setCurrentIndex(prev => prev + 1);
+      setUserInput(value);
+      
+      // Check if completed
+      if (currentIndex + 1 >= text.length) {
+        setGameState('finished');
+      }
+    } else if (value.length > userInput.length) {
+      // Incorrect character typed
+      setIncorrectChars(prev => prev + 1);
+      setErrorShake(true);
+      setTimeout(() => setErrorShake(false), 200);
+    }
+  };
+
+  // Handle mode change
+  const changeMode = (mode) => {
+    setSelectedMode(mode);
+    setGameState('idle');
+  };
+
+  // Restart game
+  const restartGame = () => {
+    initGame();
+  };
+
+  // Initialize on mount
+  useEffect(() => {
+    initGame();
+  }, [initGame]);
+
+  return (
+    <div className="min-h-screen bg-cyber-darker grid-background relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute top-20 left-10 w-96 h-96 bg-neon-cyan opacity-10 rounded-full blur-[100px]"
+          animate={{
+            x: [0, 100, 0],
+            y: [0, 50, 0],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div
+          className="absolute bottom-20 right-10 w-96 h-96 bg-neon-magenta opacity-10 rounded-full blur-[100px]"
+          animate={{
+            x: [0, -100, 0],
+            y: [0, -50, 0],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+      </div>
+
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-6xl font-bold mb-4 neon-text text-neon-cyan">
+            CYBER<span className="text-neon-magenta">TYPE</span>
+          </h1>
+          <p className="text-neon-lime text-lg tracking-wider">
+            ⚡ ENHANCE YOUR TYPING SPEED ⚡
+          </p>
+        </motion.div>
+
+        {/* Mode Selection */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="flex justify-center gap-4 mb-8"
+        >
+          {[15, 30, 60].map((mode) => (
+            <motion.button
+              key={mode}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => changeMode(mode)}
+              className={`glass px-8 py-3 rounded-lg font-semibold text-lg transition-all ${
+                selectedMode === mode
+                  ? 'bg-neon-cyan text-cyber-dark shadow-neon-cyan'
+                  : 'text-neon-cyan hover:shadow-neon-cyan'
+              }`}
+            >
+              {mode}s
+            </motion.button>
+          ))}
+        </motion.div>
+
+        {/* Stats Dashboard */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="glass rounded-2xl p-6 mb-8 max-w-4xl mx-auto"
+        >
+          <div className="grid grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-5xl font-bold text-neon-cyan mb-2">
+                {timeLeft}
+              </div>
+              <div className="text-gray-400 uppercase tracking-wider text-sm">
+                Time Left
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-5xl font-bold text-neon-magenta mb-2">
+                {wpm}
+              </div>
+              <div className="text-gray-400 uppercase tracking-wider text-sm">
+                WPM
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-5xl font-bold text-neon-lime mb-2">
+                {accuracy}%
+              </div>
+              <div className="text-gray-400 uppercase tracking-wider text-sm">
+                Accuracy
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Typing Area */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="glass rounded-2xl p-8 mb-8 max-w-4xl mx-auto"
+        >
+          <div className="text-2xl leading-relaxed mb-6 font-mono select-none">
+            {text.split('').map((char, index) => {
+              let color = 'text-gray-600';
+              let extraClasses = '';
+              
+              if (index < currentIndex) {
+                color = 'text-white';
+              } else if (index === currentIndex && gameState === 'playing') {
+                color = 'text-neon-cyan';
+                extraClasses = 'animate-pulse';
+              }
+
+              return (
+                <motion.span
+                  key={index}
+                  className={`${color} ${extraClasses}`}
+                  initial={false}
+                  animate={
+                    index === currentIndex - 1 && gameState === 'playing'
+                      ? { scale: [1, 1.2, 1] }
+                      : {}
+                  }
+                  transition={{ duration: 0.2 }}
+                  style={{
+                    textShadow: index === currentIndex && gameState === 'playing'
+                      ? '0 0 20px currentColor'
+                      : 'none'
+                  }}
+                >
+                  {char}
+                </motion.span>
+              );
+            })}
+          </div>
+
+          {/* Hidden Input */}
+          <motion.input
+            ref={inputRef}
+            type="text"
+            value={userInput}
+            onChange={handleTyping}
+            disabled={gameState !== 'playing'}
+            animate={errorShake ? { x: [-10, 10, -10, 10, 0] } : {}}
+            transition={{ duration: 0.2 }}
+            className="w-full bg-transparent border-2 border-neon-cyan rounded-lg px-4 py-3 text-white text-lg focus:outline-none focus:shadow-neon-cyan transition-all opacity-0 h-0 absolute"
+            autoComplete="off"
+          />
+
+          {/* Start/Restart Button */}
+          <div className="text-center mt-6">
+            {gameState === 'idle' && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={startGame}
+                className="bg-neon-magenta text-white px-12 py-4 rounded-lg font-bold text-xl shadow-neon-magenta hover:shadow-neon-lime transition-all"
+              >
+                START TYPING
+              </motion.button>
+            )}
+            {gameState === 'playing' && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={restartGame}
+                className="glass text-neon-cyan px-8 py-3 rounded-lg font-semibold hover:shadow-neon-cyan transition-all border-2 border-neon-cyan"
+              >
+                RESTART
+              </motion.button>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Click to Focus Hint */}
+        {gameState === 'playing' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center text-gray-500 text-sm"
+          >
+            <p>Click anywhere to focus and start typing</p>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Results Modal */}
+      <AnimatePresence>
+        {gameState === 'finished' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4"
+            onClick={restartGame}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="glass rounded-3xl p-8 max-w-3xl w-full border-2 border-neon-cyan"
+            >
+              <div className="text-center mb-8">
+                <motion.h2
+                  initial={{ y: -20 }}
+                  animate={{ y: 0 }}
+                  className="text-5xl font-bold text-neon-magenta mb-4"
+                >
+                  GAME COMPLETE
+                </motion.h2>
+                <div className="h-1 w-32 bg-gradient-to-r from-neon-cyan via-neon-magenta to-neon-lime mx-auto rounded-full" />
+              </div>
+
+              {/* Final Stats */}
+              <div className="grid grid-cols-3 gap-6 mb-8">
+                <div className="text-center glass rounded-xl p-4">
+                  <div className="text-4xl font-bold text-neon-cyan mb-2">
+                    {wpm}
+                  </div>
+                  <div className="text-gray-400 uppercase text-sm">
+                    Words/Min
+                  </div>
+                </div>
+                <div className="text-center glass rounded-xl p-4">
+                  <div className="text-4xl font-bold text-neon-lime mb-2">
+                    {accuracy}%
+                  </div>
+                  <div className="text-gray-400 uppercase text-sm">
+                    Accuracy
+                  </div>
+                </div>
+                <div className="text-center glass rounded-xl p-4">
+                  <div className="text-4xl font-bold text-neon-magenta mb-2">
+                    {correctChars}
+                  </div>
+                  <div className="text-gray-400 uppercase text-sm">
+                    Keystrokes
+                  </div>
+                </div>
+              </div>
+
+              {/* WPM Over Time Chart */}
+              {wpmHistory.length > 1 && (
+                <div className="mb-8">
+                  <h3 className="text-xl font-semibold text-neon-cyan mb-4 text-center">
+                    SPEED OVER TIME
+                  </h3>
+                  <div className="glass rounded-xl p-4">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <LineChart data={wpmHistory}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                        <XAxis 
+                          dataKey="time" 
+                          stroke="#00f0ff"
+                          label={{ value: 'Seconds', position: 'insideBottom', offset: -5, fill: '#00f0ff' }}
+                        />
+                        <YAxis 
+                          stroke="#00f0ff"
+                          label={{ value: 'WPM', angle: -90, position: 'insideLeft', fill: '#00f0ff' }}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'rgba(10, 10, 15, 0.9)', 
+                            border: '1px solid #00f0ff',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="wpm" 
+                          stroke="#ff00ff" 
+                          strokeWidth={3}
+                          dot={{ fill: '#39ff14', r: 5 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-4 justify-center">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={restartGame}
+                  className="bg-neon-magenta text-white px-10 py-4 rounded-lg font-bold text-lg shadow-neon-magenta hover:shadow-neon-lime transition-all"
+                >
+                  PLAY AGAIN
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => changeMode(selectedMode)}
+                  className="glass text-neon-cyan px-10 py-4 rounded-lg font-bold text-lg border-2 border-neon-cyan hover:shadow-neon-cyan transition-all"
+                >
+                  CHANGE MODE
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Click to focus overlay */}
+      {gameState === 'playing' && (
+        <div
+          className="fixed inset-0 z-0"
+          onClick={() => inputRef.current?.focus()}
+        />
+      )}
+    </div>
+  );
+}
+
+export default App;
